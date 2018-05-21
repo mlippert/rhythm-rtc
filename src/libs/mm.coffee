@@ -45,6 +45,7 @@
 
       @createLinks()
 
+    # d3func - node radius based on participant
     nodeRadius: (d) =>
       if (d.participant == "energy")
         30
@@ -93,7 +94,7 @@
     # a little complicated, since we want to be able to put text
     # and prettier stuff on nodes in the future (maybe).
     # We create a group for each node, and do a selection for moving them around.
-    renderNodes: () =>
+    renderNodes: () ->
       @node = @nodesG.selectAll ".node"
         .data @nodes, (d) -> d.participant
 
@@ -139,7 +140,7 @@
       # remove nodes that have left
       @node.exit().remove()
 
-    # different colors for different types of nodes...
+    # d3func - different colors for different types of nodes...
     nodeColor: (d) =>
       if (d.participant == 'energy')
         @sphereColorScale(@data.transitions)
@@ -148,7 +149,7 @@
       else
         '#3AC4C5'
 
-    # we have different kinds of nodes, so this just abstracts
+    # d3func - we have different kinds of nodes, so this just abstracts
     # out the transform function.
     nodeTransform: (d) =>
       if (d.participant == "energy")
@@ -156,7 +157,7 @@
       else
         "rotate(#{ @angle(d.participant) })translate(#{ @radius },0)"
 
-    # a translation between the angle rotation for nodes
+    # d3func - a translation between the angle rotation for nodes
     # and the raw x/y positions. Used for computing link endpoints.
     getNodeCoords: (id) =>
       transformText = @nodeTransform({'participant': id})
@@ -164,7 +165,7 @@
       return {'x': coords[0], 'y': coords[1]}
 
 
-    renderLinks: () =>
+    renderLinks: () ->
       @link = @linksG.selectAll "line.link"
         .data @links
 
@@ -192,7 +193,7 @@
       @link.exit().remove()
 
 
-    # translation / position for "energy" ball.
+    # d3func - translation / position for "energy" ball.
     # Moves closer (just based on weighting) to nodes.
     sphereTranslation: () =>
       x = 0
@@ -214,17 +215,15 @@
 
     # create links, give it a 0 default (all nodes should be linked to
     # ball)
-    createLinks: () =>
+    createLinks: () ->
       @links = ({'source': turn.participant, 'target': 'energy', 'weight': turn.turns} for turn in @data.turns)
       for participant in @data.participants
         if !_.find(@links, (link) => link.source == participant)
           @links.push({'source': participant, 'target': 'energy', 'weight': 0})
 
 
-    # we want the user's node always at the top
-    # This returns a translation string to rotate the _entire_
-    # "graph group" to keep the user's node at the top.
-    constantRotationAngle: () =>
+    # the angle to rotate the graph by to put the user's node at the top.
+    constantRotationAngle: () ->
       mod = (a, n) -> a - Math.floor(a/n) * n
       # TODO unsure about this
       angle = @angle(@localParticipants[0]) || 0
@@ -236,11 +235,13 @@
       else
         return 0
 
+    # d3func - This returns a translation string to rotate the _entire_
+    # "graph group" to keep the user's node at the top.
     constantRotation: () =>
-        return "rotate(#{ @constantRotationAngle() })"
+      return "rotate(#{ @constantRotationAngle() })"
 
 
-    updateData: (data) =>
+    updateData: (data) ->
       console.log "updating MM viz with data:", data
       # if we're not updating participants, don't redraw everything.
       if data.participants.length == @data.participants.length
