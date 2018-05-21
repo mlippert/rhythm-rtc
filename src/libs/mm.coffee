@@ -3,7 +3,11 @@
 #  'transitions': <Number Of transitions in interval>,
 #  'turns': [{'participant': <participantId>,
 #             'turns': <Percent of turns in interval by this participant>}, ...]
-  d3 = require('d3')
+  d3 = Object.assign({},
+                     require('d3-selection'),
+                     require('d3-scale'),
+                     require('d3-transition'),
+                    )
   _ = require('underscore')
 
   module.exports.MeetingMediator = class MM
@@ -21,17 +25,18 @@
       # determines positions for participant avatars
       # use [115, 435] to keep local participant node at the top
       # of the visual.
-      @angle = d3.scale.ordinal()
+      @angle = d3.scalePoint()
         .domain @data.participants
-        .rangePoints [0, 360], 1 # 90 to make it start at top? still goes to left...
+        .range [0, 360] # 90 to make it start at top? still goes to left...
+        .padding 0.5
 
       # determines thickness of edges
-      @linkStrokeScale = d3.scale.linear()
+      @linkStrokeScale = d3.scaleLinear()
         .domain [0, 1]
         .range [3, 15]
 
       # color scale for sphere in the middle
-      @sphereColorScale = d3.scale.linear()
+      @sphereColorScale = d3.scaleLinear()
         .domain [0, @data.participants.length * 3]
         .range ['#C8E6C9', '#2E7D32']
         .clamp true
@@ -161,8 +166,8 @@
     # and the raw x/y positions. Used for computing link endpoints.
     getNodeCoords: (id) =>
       transformText = @nodeTransform({'participant': id})
-      coords = d3.transform(transformText).translate
-      return {'x': coords[0], 'y': coords[1]}
+      t = MM.getTransformation(transformText)
+      return {'x': t.translate.x, 'y': t.translate.y}
 
 
     renderLinks: () ->
@@ -272,3 +277,40 @@
           @graphG.transition().duration(100)
             .attr "transform", @constantRotation()
           ), @nodeTransitionTime + 100)
+
+
+    # Function copied pretty much verbatim from stackoverflow for replacing use of
+    # the V3 d3.transform when moving to d3 V4
+    # https://stackoverflow.com/questions/38224875/replacing-d3-transform-in-d3-v4
+    @getTransformation: (transform) ->
+      # Create a dummy g for calculation purposes only. This will never
+      # be appended to the DOM and will be discarded once this function 
+      # returns.
+      g = document.createElementNS "http://www.w3.org/2000/svg", "g"
+
+      # Set the transform attribute to the provided string value.
+      g.setAttributeNS null, "transform", transform
+
+      # consolidate the SVGTransformList containing all transformations
+      # to a single SVGTransform of type SVG_TRANSFORM_MATRIX and get
+      # its SVGMatrix.
+      identityMatrix = {a: 1, b: 0, c: 0, d: 1, e: 0, f: 0}
+      matrix = g.transform.baseVal.consolidate()?.matrix ? identityMatrix
+
+      # Below calculations are taken and adapted from the private function
+      # transform/decompose.js of D3's module d3-interpolate.
+      {a, b, c, d, e, f} = matrix
+      if scaleX = Math.sqrt(a * a + b * b) then a /= scaleX;    b /= scaleX
+      if skewX = a * c + b * d             then c -= a * skewX; d -= b * skewX
+      if scaleY = Math.sqrt(c * c + d * d) then c /= scaleY;    d /= scaleY; skewX /= scaleY
+      if a * d < b * c                     then a = -a;         b = -b;      skewX = -skewX; scaleX = -scaleX
+
+      return
+        translate:
+          x: e
+          y: f
+        rotate: Math.atan2(b, a) * 180 / Math.PI
+        skewX: Math.atan(skewX) * 180 / Math.PI
+        scale:
+          x: scaleX
+          y: scaleY
