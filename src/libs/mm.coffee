@@ -7,10 +7,9 @@
   _ = require('underscore')
 
   module.exports.MeetingMediator = class MM
-    constructor: (data, localParticipants, width, height) ->
+    constructor: (@data, @localParticipants, width, height) ->
 
-      console.log "constructing MM with data:", data
-      @localParticipants = localParticipants
+      console.log "constructing MM with data:", @data
       @fontFamily = "Futura,Helvetica Neue,Helvetica,Arial,sans-serif"
       @margin = {top: 0, right: 0, bottom: 0, left: 0}
       @width = width - @margin.right - @margin.left
@@ -18,8 +17,6 @@
 
       # radius of network as a whole
       @radius = 115
-
-      @data = data
 
       # determines positions for participant avatars
       # use [115, 435] to keep local participant node at the top
@@ -35,12 +32,12 @@
 
       # color scale for sphere in the middle
       @sphereColorScale = d3.scale.linear()
-        .domain [0, data.participants.length * 3]
+        .domain [0, @data.participants.length * 3]
         .range ['#C8E6C9', '#2E7D32']
         .clamp true
 
       # create initial node data
-      @nodes = ({'participant': p, 'name':@data.names[i]} for p, i in @data.participants)
+      @nodes = ({'participant': p, 'name': @data.names[i]} for p, i in @data.participants)
       @nodes.push({'participant': 'energy'}) # keep the energy ball in the list of nodes
 
       @nodeTransitionTime = 500
@@ -62,7 +59,7 @@
         .attr "width", @width + @margin.left + @margin.right
         .attr "height", @height + @margin.top + @margin.bottom
         .append "g"
-        .attr "transform", "translate(" + @width / 2 + "," + @height / 2 + ")"
+        .attr "transform", "translate(#{ @width / 2 },#{ @height / 2 })"
 
       @chartBody = @chart.append "g"
         .attr "width", @width
@@ -126,7 +123,7 @@
           if (d.participant == 'energy')
             ""
           else
-            "rotate(" + (-1 * (@constantRotationAngle() + @angle(d.participant))) + ")"
+            "rotate(#{ (-1 * (@constantRotationAngle() + @angle(d.participant))) })"
         .attr "fill", (d) =>
           if (_.contains(@localParticipants, d.participant))
             "#FFFFFF"
@@ -157,9 +154,9 @@
       if (d.participant == "energy")
         @sphereTranslation()
       else
-        "rotate(" + @angle(d.participant) + ")translate(" + @radius + ",0)"
+        "rotate(#{ @angle(d.participant) })translate(#{ @radius },0)"
 
-    # a translatoin between the angle rotation for nodes
+    # a translation between the angle rotation for nodes
     # and the raw x/y positions. Used for computing link endpoints.
     getNodeCoords: (id) =>
       transformText = @nodeTransform({'participant': id})
@@ -213,7 +210,7 @@
         # (and use dist/2 to prevent collision)
         x += turn.turns * (xDist / 2)
         y += turn.turns * (yDist / 2)
-      return "translate(" + x + "," + y + ")"
+      return "translate(#{ x },#{ y })"
 
     # create links, give it a 0 default (all nodes should be linked to
     # ball)
@@ -224,7 +221,7 @@
           @links.push({'source': participant, 'target': 'energy', 'weight': 0})
 
 
-    # we want the users's node always at the top
+    # we want the user's node always at the top
     # This returns a translation string to rotate the _entire_
     # "graph group" to keep the user's node at the top.
     constantRotationAngle: () =>
@@ -240,7 +237,7 @@
         return 0
 
     constantRotation: () =>
-        return "rotate(" + @constantRotationAngle() + ")"
+        return "rotate(#{ @constantRotationAngle() })"
 
 
     updateData: (data) =>
