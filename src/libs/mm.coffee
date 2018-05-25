@@ -1,5 +1,6 @@
 # Data given to MM viz:
 # {'participants': [<participantId, participantId, ...],
+#  'names'?: [<participantName, participantName, ...],
 #  'transitions': <Number Of transitions in interval>,
 #  'turns': [{'participant': <participantId>,
 #             'turns': <Percent of turns in interval by this participant>}, ...]
@@ -10,6 +11,26 @@
                     )
   _ = require('underscore')
 
+  NETWORK_RADIUS = 115
+  PARTICIPANT_NODE_RADIUS = 20
+  ENERGY_NODE_RADIUS = 30
+
+  PARTICIPANT_NODE_COLOR_LOCAL = '#092070'
+  PARTICIPANT_NODE_COLOR_OTHER = '#3AC4C5'
+
+  # get array of participant nodes from data
+  nodesFromData = (data) ->
+    nodes = ({'participant': p, 'name': (data.names?[i] ? p)[0]} for p, i in data.participants)
+    nodes.push({'participant': 'energy'}) # keep the energy ball in the list of nodes
+    return nodes
+
+  # create links, 1 link to the energy ball for each participant
+  # give it a 0 default weight
+  linksFromData = (data) ->
+    links = ({'source': p, 'target': 'energy', 'weight': 0} for p in data.participants)
+    return links
+
+  # exported MeetingMediator class
   module.exports.MeetingMediator = class MM
     constructor: (@data, @localParticipants, width, height) ->
 
@@ -20,14 +41,12 @@
       @height = height - @margin.bottom - @margin.top
 
       # radius of network as a whole
-      @radius = 115
+      @radius = NETWORK_RADIUS
 
-      # determines positions for participant avatars
-      # use [115, 435] to keep local participant node at the top
-      # of the visual.
+      # distributes positions for participant avatars evenly in a circle
       @angle = d3.scalePoint()
         .domain @data.participants
-        .range [0, 360] # 90 to make it start at top? still goes to left...
+        .range [0, 360]
         .padding 0.5
 
       # determines thickness of edges
@@ -42,20 +61,19 @@
         .clamp true
 
       # create initial node data
-      @nodes = ({'participant': p, 'name': @data.names[i]} for p, i in @data.participants)
-      @nodes.push({'participant': 'energy'}) # keep the energy ball in the list of nodes
+      @nodes = nodesFromData @data
+      @links = linksFromData @data
+      @updateLinkWeight()
 
       @nodeTransitionTime = 500
       @linkTransitionTime = 500
 
-      @createLinks()
-
     # d3func - node radius based on participant
     nodeRadius: (d) =>
       if (d.participant == "energy")
-        30
+        ENERGY_NODE_RADIUS
       else
-        20
+        PARTICIPANT_NODE_RADIUS
 
 
     render: (id="#meeting-mediator") ->
@@ -82,7 +100,7 @@
         .attr "stroke-width", 3
         .style "stroke-dasharray", ("10, 5")
         .attr "fill", "transparent"
-        .attr "r", @radius + 20 + 2 # + @nodeRadius + 2.5
+        .attr "r", @radius + PARTICIPANT_NODE_RADIUS + 2
 
       # put links / nodes in a separate group
       @linksG = @graphG.append "g"
@@ -100,19 +118,23 @@
     # and prettier stuff on nodes in the future (maybe).
     # We create a group for each node, and do a selection for moving them around.
     renderNodes: () ->
-      @node = @nodesG.selectAll ".node"
+      nodeGs = @nodesG.selectAll ".node"
         .data @nodes, (d) -> d.participant
 
-      @nodeG = @node.enter().append "g"
+      # remove node groups for nodes that have left
+      nodeGs.exit().remove()
+
+      # new node groups - add attributes and child elements
+      nodeGsEnter = nodeGs.enter().append "g"
         .attr "class", "node"
         .attr "id", (d) -> d.participant
 
-      @nodeG.append "circle"
+      nodeGsEnter.append "circle"
         .attr "class", "nodeCircle"
         .attr "fill", @nodeColor
         .attr "r", @nodeRadius
 
-      @nodeG.append "circle"
+      nodeGsEnter.append "circle"
         .attr "class", "nodeFill"
         .attr "fill", "#FFFFFF"
         .attr "r", (d) =>
@@ -121,7 +143,7 @@
           else
             @nodeRadius(d) - 3
 
-      @nodeG.append "text"
+      nodeGsEnter.append "text"
         .attr "text-anchor", "middle"
         .attr "font-size", "24px"
         .attr "dy", ".35em"
@@ -137,22 +159,20 @@
             "#000000"
         .text (d) -> d.name
 
+      # all node groups
       @nodesG.selectAll(".node").transition().duration(500)
         .attr "transform", @nodeTransform
         .select('circle') # change circle color
         .attr "fill", @nodeColor
-
-      # remove nodes that have left
-      @node.exit().remove()
 
     # d3func - different colors for different types of nodes...
     nodeColor: (d) =>
       if (d.participant == 'energy')
         @sphereColorScale(@data.transitions)
       else if _.contains(@localParticipants, d.participant)
-        '#092070'
+        PARTICIPANT_NODE_COLOR_LOCAL
       else
-        '#3AC4C5'
+        PARTICIPANT_NODE_COLOR_OTHER
 
     # d3func - we have different kinds of nodes, so this just abstracts
     # out the transform function.
@@ -171,11 +191,14 @@
 
 
     renderLinks: () ->
-      @link = @linksG.selectAll "line.link"
-        .data @links
+      linkGs = @linksG.selectAll "line.link"
+        .data @links, (d) -> d.source
 
-      @link.enter()
-        .append "line"
+      # remove links for participants who have left
+      linkGs.exit().remove()
+
+      # add links for new participants
+      linkGs.enter().append "line"
         .attr "class", "link"
         .attr "stroke", "#646464"
         .attr "fill", "none"
@@ -186,16 +209,16 @@
         .attr "x2", (d) => @getNodeCoords(d.target)['x']
         .attr "y2", (d) => @getNodeCoords(d.target)['y']
 
-      @link.transition().duration(@linkTransitionTime)
-        .attr "stroke-width", (d) => @linkStrokeScale d.weight
-
-      @link
+      # update existing links
+      linkGs
         .attr "x1", (d) => @getNodeCoords(d.source)['x']
         .attr "y1", (d) => @getNodeCoords(d.source)['y']
         .attr "x2", (d) => @getNodeCoords(d.target)['x']
         .attr "y2", (d) => @getNodeCoords(d.target)['y']
 
-      @link.exit().remove()
+      # all links
+      @linksG.selectAll("line.link").transition().duration(@linkTransitionTime)
+        .attr "stroke-width", (d) => @linkStrokeScale d.weight
 
 
     # d3func - translation / position for "energy" ball.
@@ -218,18 +241,9 @@
         y += turn.turns * (yDist / 2)
       return "translate(#{ x },#{ y })"
 
-    # create links, give it a 0 default (all nodes should be linked to
-    # ball)
-    createLinks: () ->
-      @links = ({'source': turn.participant, 'target': 'energy', 'weight': turn.turns} for turn in @data.turns)
-      for participant in @data.participants
-        if !_.find(@links, (link) => link.source == participant)
-          @links.push({'source': participant, 'target': 'energy', 'weight': 0})
-
 
     # the angle to rotate the graph by to put the user's node at the top.
     constantRotationAngle: () ->
-      mod = (a, n) -> a - Math.floor(a/n) * n
       # TODO unsure about this
       angle = @angle(@localParticipants[0]) || 0
       targetAngle = -90
@@ -245,21 +259,28 @@
     constantRotation: () =>
       return "rotate(#{ @constantRotationAngle() })"
 
+    # update the link weight from current turn data
+    updateLinkWeight: () ->
+      for link in @links
+        link.weight = (@data.turns.find (turn) => turn.participant is link.source)?.turns ? 0
+      return
+
 
     updateData: (data) ->
       console.log "updating MM viz with data:", data
       # if we're not updating participants, don't redraw everything.
       if data.participants.length == @data.participants.length
         @data = data
-        @createLinks()
+        @updateLinkWeight()
 
         @renderLinks()
         @renderNodes()
       else
         # Create nodes again
         @data = data
-        @nodes = ({'participant': p} for p in @data.participants)
-        @nodes.push({'participant': 'energy'}) # keep the energy ball in the list of nodes
+        @nodes = nodesFromData @data
+        @links = linksFromData @data
+        @updateLinkWeight()
 
         # recompute the color scale for the sphere and angle domain
         @sphereColorScale.domain [0, data.participants.length * 5]
