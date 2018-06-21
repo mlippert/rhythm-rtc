@@ -12,8 +12,9 @@ function getUrlParam(sParam) {
     }
   }
 };
+
 function log() {
-  if (process.env.REACT_APP_DEBUG == "true") {
+  if (window.client_config.react_app_debug == true) {
     console.log.apply(console, arguments);
   }
 };

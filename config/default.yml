@@ -1,0 +1,22 @@
+server:
+  port: 3001
+  sessionSecret: secret
+  lti:
+    roomMapUrl:
+    redisUrl:
+    consumerKey: key
+    consumerSecret: secret
+  
+client:
+  signalMaster:
+    url: http://localhost:3002
+    path:
+  dataServer:
+    url: http://localhost:3000
+    path:
+    email: default-user-email
+    password: default-user-password
+  faceTracking:
+    enabled: false
+    overlay: false
+    eventFrequency: 500

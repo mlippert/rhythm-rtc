@@ -1,0 +1,10 @@
+server:
+  sessionSecret: SESSION_SECRET
+  lti:
+    consumerKey: CONSUMER_KEY
+    consumerSecret: CONSUMER_SECRET
+  
+client:
+  dataServer:
+    email: DATASERVER_EMAIL
+    password: DATASERVER_PASSWORD

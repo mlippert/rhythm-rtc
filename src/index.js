@@ -2,8 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './components/App';
 import registerServiceWorker from './registerServiceWorker';
-import './index.css';
-import {getUrlParam} from "./libs/utils"
+import {getUrlParam} from "./libs/utils";
+import '../node_modules/materialize-css/dist/js/materialize.js';
+import '../node_modules/materialize-css/dist/css/materialize.css';
+import 'webrtc-adapter';  // see https://bloggeek.me/webrtc-adapter-js/ for what this does.
 
 let user_data = window.user_data || {};
 user_data.user_id = user_data.user_id || getUrlParam("user") || window.prompt("Please enter a username!","name") || "default";
@@ -16,6 +18,8 @@ if (user_data.room === undefined) {
   // just in case
   user_data.room = "DEMOROOM"
 }
+console.log("debug mode: ", window.client_config.react_app_debug)
+
 ReactDOM.render(<App user_data={user_data} />, document.getElementById('rtc-container'));
 //registerServiceWorker();
 
