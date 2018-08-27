@@ -1,0 +1,31 @@
+server:
+  port: 3001
+  sessionSecret: secret
+  lti:
+    roomMapUrl:
+    redisUrl:
+    consumerKey: key
+    consumerSecret: secret
+
+client:
+  react_app_debug: true
+  webrtc_debug: true
+  signalMaster:
+    url: http://localhost:3002
+    path:
+  dataServer:
+    url: http://localhost:3000
+    path:
+    email: default-user-email
+    password: default-user-password
+  faceTracking:
+    enabled: false
+    overlay: false
+    eventFrequency: 500
+  firebase:
+    apiKey: AIzaSyAbnjLKuAmTPTWnsLRNZ3V8i6D455ZReNk
+    authDomain: riff-1e882.firebaseapp.com
+    databaseURL: https://riff-1e882.firebaseio.com
+    projectId: riff-1e882
+    storageBucket: riff-1e882.appspot.com
+    messagingSenderId: 876860777687

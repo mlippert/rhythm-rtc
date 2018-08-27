@@ -1,0 +1,12 @@
+client:
+  react_app_debug: false
+  webrtc_debug: false
+  # the docker container reverse proxy will forward websocket connections
+  signalMaster:
+    url: /
+    path: /api/signalmaster
+
+  # the docker container reverse proxy will forward REST and websocket connections
+  dataServer:
+    url: /
+    path: /api/videodata

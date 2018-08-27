@@ -1,0 +1,20 @@
+client:
+  react_app_debug: true
+  webrtc_debug: true
+  # the docker container reverse proxy will forward websocket connections
+  signalMaster:
+    url: /
+    path: /api/signalmaster
+
+  # the docker container reverse proxy will forward REST and websocket connections
+  dataServer:
+    url: /
+    path: /api/videodata
+  firebase:
+    apiKey: AIzaSyAbnjLKuAmTPTWnsLRNZ3V8i6D455ZReNk
+    authDomain: riff-1e882.firebaseapp.com
+    databaseURL: https://riff-1e882.firebaseio.com
+    projectId: riff-1e882
+    storageBucket: riff-1e882.appspot.com
+    messagingSenderId: 876860777687
+
