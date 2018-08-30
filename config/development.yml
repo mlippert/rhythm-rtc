@@ -1,0 +1,20 @@
+# This file should only contain configuration settings which override the values
+# in default.yml and are reasonable starting values for doing development.
+# If it isn't a reasonable value for most developers on the team, put the
+# value in local-development.yml which should not be committed!
+#
+# DON'T ADD *Confidential* IDs and keys to this file. Use local.yml (or
+# local-development.yml) which should not be committed!
+#
+client:
+  react_app_debug: true
+  webrtc_debug: true
+  # the docker container reverse proxy will forward websocket connections
+  signalMaster:
+    url: /
+    path: /api/signalmaster
+
+  # the docker container reverse proxy will forward REST and websocket connections
+  dataServer:
+    url: /
+    path: /api/videodata

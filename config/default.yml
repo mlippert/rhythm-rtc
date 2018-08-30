@@ -1,0 +1,36 @@
+# All possible configuration settings should be present in this file with either a reasonable
+# default/example value or null (empty).
+#
+# DON'T ADD *Confidential* IDs and keys to this file. Use local.yml which should not be committed!
+#
+server:
+  port: 3001
+  sessionSecret: secret
+  lti:
+    roomMapUrl:
+    redisUrl:
+    consumerKey: key
+    consumerSecret: secret
+
+client:
+  react_app_debug: true
+  webrtc_debug: true
+  signalMaster:
+    url: http://localhost:3002
+    path:
+  dataServer:
+    url: http://localhost:3000
+    path:
+    email: default-user-email
+    password: default-user-password
+  faceTracking:
+    enabled: false
+    overlay: false
+    eventFrequency: 500
+  firebase:
+    apiKey:
+    authDomain:
+    databaseURL:
+    projectId:
+    storageBucket:
+    messagingSenderId:

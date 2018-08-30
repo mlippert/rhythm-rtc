@@ -5,10 +5,13 @@ export default function trackFace(app, user, roomname, videoId) {
 
   log("starting to track facial movement!");
 
+  let faceOverlay = window.client_config.faceTracking.overlay;
+  let faceEventFreq = window.client_config.faceTracking.eventFrequency;
+
   var faceEvents = new Thumos(videoId,
       'video-overlay',
-      process.env.REACT_APP_FACE_OVERLAY === "true",
-      process.env.REACT_APP_FACE_FREQ);
+      faceOverlay,
+      faceEventFreq);
   faceEvents.bind('faceMoving', function (data) {
     app.service('faces').create({
       'participant': user,

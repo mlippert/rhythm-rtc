@@ -1,0 +1,60 @@
+@charset "utf-8";
+
+// Import a Google Font
+@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
+
+// WIDTHS
+// In Bulma, this makes the hamburger only appear in small screens.
+// Without it, it appears by default even in med-big screens 
+$gap: 32px;
+$tablet:	568px;
+$desktop:	896px + (2 * $gap);
+//$widescreen:	1152px + (2 * $gap);
+//$fullhd:	1344px + (2 * $gap);
+
+// BRAND COLORS
+$gray: #57606f;
+$purple: rgb(138,106,148);
+$pink: rgb(243,	108,	110);
+$pinkHover: rgb(242, 136, 137);
+$purpleHover: rgba(138, 106, 148, 0.7);
+$blue: rgb(19,129,161);
+
+$primary: $purple;
+$link: $purple;
+
+a:hover {
+  color: $purpleHover;
+}
+
+
+// Update Bulma's global variables
+$family-sans-serif: "Nunito", sans-serif;
+
+// Import only what you need from Bulma
+@import "node_modules/bulma/sass/utilities/_all.sass";
+@import "node_modules/bulma/sass/base/_all.sass";
+@import "node_modules/bulma/sass/elements/button.sass";
+@import "node_modules/bulma/sass/elements/container.sass";
+@import "node_modules/bulma/sass/elements/form.sass";
+@import "node_modules/bulma/sass/elements/title.sass";
+@import "node_modules/bulma/sass/layout/hero.sass";
+@import "node_modules/bulma/sass/layout/section.sass";
+@import "node_modules/bulma/sass/components/navbar.sass";
+@import "node_modules/bulma/sass/layout/_all.sass";
+@import "node_modules/bulma/sass/components/_all.sass";
+@import "node_modules/bulma/sass/elements/_all.sass";
+@import "node_modules/bulma/sass/grid/tiles.sass";
+
+@import "bulma/bulma.sass";
+
+body {
+    background-color: #f6f0fb;
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+html {
+  background-color: #f6f0fb;
+}

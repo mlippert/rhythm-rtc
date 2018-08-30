@@ -1,0 +1,52 @@
+# Args for FROM directives
+ARG NODE_VER=10
+
+#
+# ---- Base Node image ----
+FROM node:${NODE_VER} AS base
+# The node:8 npm (v 5.6) has some issues, update it to latest
+RUN npm install -g npm
+# Modified bashrc which defines some aliases and an interactive prompt
+COPY bashrc /root/.bashrc
+COPY --chown=node:node bashrc /home/node/.bashrc
+# set the root password to password (I don't care that it's simple it's only for development)
+# this shouldn't exist in a production container
+RUN echo "root:password" | chpasswd
+# create and set working directory owned by non-root user; set that user
+WORKDIR /app
+RUN chown node:node /app
+USER node
+
+#
+# ---- Development ----
+FROM base AS development
+LABEL Description="dev: This image runs the riff-rtc server which customizes the chat page w/ config and lti login info"
+# This is the development image, set NODE_ENV to reflect that
+ENV NODE_ENV=development
+# npm install (and build if needed) must exist in the volume bound at /app
+# expected to be the local repo working directory.
+#
+# allow the port used to be specified, default to 3001
+ARG PORT=3001
+ENV PORT=$PORT
+# expose port
+EXPOSE $PORT
+# allow all referenced environment variables to be overridden
+ARG FIREBASE_CONFIG
+ARG DATASERVER_EMAIL
+ARG DATASERVER_PASSWORD
+ARG SESSION_SECRET
+ARG CONSUMER_KEY
+ARG CONSUMER_SECRET
+# Set the environment variables w/ values passed in
+ENV FIREBASE_CONFIG=$FIREBASE_CONFIG \
+    DATASERVER_EMAIL=$DATASERVER_EMAIL \
+    DATASERVER_PASSWORD=$DATASERVER_PASSWORD \
+    SESSION_SECRET=$SESSION_SECRET \
+    CONSUMER_KEY=$CONSUMER_KEY \
+    CONSUMER_SECRET=$CONSUMER_SECRET
+# when a container is started w/ this image the riff-server repository working
+# directory must be bound at /app and all dependent packages installed for this
+# command to correctly start the riff-server
+VOLUME ["/app"]
+CMD ["npm", "run", "start:dev"]
