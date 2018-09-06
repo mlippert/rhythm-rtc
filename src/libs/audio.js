@@ -6,11 +6,10 @@ export default function captureSpeakingEvent(server, userinfo) {
    * closing over the server + userinfo args
    */
   return function(data) {
-    log(userinfo.roomname);
-    log(userinfo.username);
+    log(userinfo)
     server.service('utterances').create({
       'participant': userinfo.username,
-      'room': userinfo.roomname,
+      'room': userinfo.roomName,
       'startTime': data.start.toISOString(),
       'endTime': data.end.toISOString(),
       'token': userinfo.token
